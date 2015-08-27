@@ -297,7 +297,7 @@ impl AppPlayer<Board, Move> for HumanPlayer {
 		}
 
 		loop {
-			let src = read_coords("Token to move? (e.g., a1)");
+			let src = Coords::read("Token to move? (e.g., a1)");
 			let mut moves_from_src: Vec<Move> = moves.iter().filter(|ref m| m.src == src).cloned().collect();
 
 			match moves_from_src.len() {
@@ -309,7 +309,7 @@ impl AppPlayer<Board, Move> for HumanPlayer {
 				_ => (),
 			}
 
-			let dst = read_coords("Destination? (e.g., b2)");
+			let dst = Coords::read("Destination? (e.g., b2)");
 			moves_from_src.retain(|ref m| m.dst == dst);
 
 			match moves_from_src.len() {

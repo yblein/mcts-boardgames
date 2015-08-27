@@ -1,4 +1,4 @@
-macro_rules! make_type_square_grid_2d {
+macro_rules! make_types_square_grid_2d {
 	($name:ident, $t:ty, $n:expr) => {
 		#[derive(Clone)]
 		struct $name([[$t; $n]; $n]);
@@ -72,33 +72,35 @@ macro_rules! make_type_square_grid_2d {
 			}
 		}
 
-		fn read_coords(msg: &str) -> Coords {
-			loop {
-				print!("{}\n> ", msg);
-				std::io::stdout().flush().unwrap();
+		impl Coords {
+			fn read(msg: &str) -> Coords {
+				loop {
+					print!("{}\n> ", msg);
+					std::io::stdout().flush().unwrap();
 
-				let mut input = String::new();
-				if std::io::stdin().read_line(&mut input).is_err() {
-					continue;
+					let mut input = String::new();
+					if std::io::stdin().read_line(&mut input).is_err() {
+						continue;
+					}
+
+					let s: &str = input.trim();
+					let tmp: Vec<char> = s[0..1].to_uppercase().chars().collect();
+					let letter: char = tmp[0];
+					let number: usize = if let Some(n) = s[1..].parse::<usize>().ok() {
+						n
+					} else {
+						continue;
+					};
+
+					let x = letter as usize - 'A' as usize;
+					let y = number as usize - 1;
+
+					if x >= $n || y >= $n {
+						continue;
+					}
+
+					return Coords { x: x, y: y };
 				}
-
-				let s: &str = input.trim();
-				let tmp: Vec<char> = s[0..1].to_uppercase().chars().collect();
-				let letter: char = tmp[0];
-				let number: usize = if let Some(n) = s[1..].parse::<usize>().ok() {
-					n
-				} else {
-					continue;
-				};
-
-				let x = letter as usize - 'A' as usize;
-				let y = number as usize - 1;
-
-				if x >= $n || y >= $n {
-					continue;
-				}
-
-				return Coords { x: x, y: y };
 			}
 		}
 	}

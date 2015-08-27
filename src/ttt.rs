@@ -108,7 +108,7 @@ impl AppPlayer<Board, Move> for HumanPlayer {
 		}
 
 		loop {
-			let pos = read_coords("Coords to play? (e.g., a1)");
+			let pos = Coords::read("Coords to play? (e.g., a1)");
 
 			for m in &moves {
 				if m.0 == pos {
