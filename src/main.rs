@@ -3,6 +3,8 @@ extern crate mcts;
 
 use std::io::Write;
 
+#[macro_use]
+mod grid;
 mod checkers;
 mod app;
 
