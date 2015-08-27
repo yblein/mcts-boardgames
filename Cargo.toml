@@ -1,0 +1,16 @@
+[package]
+name = "mcts-boardgames"
+version = "0.1.0"
+authors = ["Yoann Blein <yoann.blein@free.fr>"]
+
+[lib]
+name = "mcts"
+path = "src/mcts.rs"
+
+[[bin]]
+name = "checkers"
+path = "src/main.rs"
+
+[dependencies]
+rand = "0.3"
+time = "*"
