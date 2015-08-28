@@ -1,20 +1,15 @@
+/// Implementation of a Tic-tac-toe game
+
 extern crate mcts;
 
 mod utils;
 mod app;
 
-use std::fmt::Display;
-use std::fmt::Debug;
-use std::fmt::Formatter;
-use std::fmt::Result;
+use std::fmt::{Display, Debug, Formatter, Result};
 
-use mcts::Player;
-use mcts::TwoPlayerBoard;
-
+use mcts::{Player, TwoPlayerGame};
 use app::Input;
-
-use utils::Coords2D;
-use utils::draw_board;
+use utils::{Coords2D, draw_board};
 
 const WIDTH: usize = 3;
 
@@ -89,7 +84,7 @@ impl std::ops::IndexMut<Coords2D> for Board {
 	}
 }
 
-impl TwoPlayerBoard<Move> for Board {
+impl TwoPlayerGame<Move> for Board {
 	fn winner(&self) -> Option<Player> {
 		static LIST: [[Coords2D; 3]; 8] = [
 			[Coords2D { x: 0, y: 0 }, Coords2D { x: 1, y: 0 }, Coords2D { x: 2, y: 0 }],

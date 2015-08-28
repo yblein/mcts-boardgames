@@ -1,33 +1,28 @@
+/// Implementation of a checkers (or draughts) with international rules
+
 extern crate mcts;
 
 mod utils;
 mod app;
 
-use std::fmt::Display;
-use std::fmt::Debug;
-use std::fmt::Formatter;
-use std::fmt::Result;
+use std::fmt::{Display, Debug, Formatter, Result};
 
-use mcts::Player;
-use mcts::TwoPlayerBoard;
-
+use mcts::{Player, TwoPlayerGame};
 use app::Input;
-
-use utils::Coords2D;
-use utils::draw_board;
+use utils::{Coords2D, draw_board};
 
 const WIDTH: usize = 8;
 
 #[derive(Clone)]
-struct Grid([[Option<Token>; WIDTH]; WIDTH]);
+struct Board([[Option<Token>; WIDTH]; WIDTH]);
 
-impl Grid {
-	fn empty() -> Grid {
-		Grid([[Default::default(); WIDTH]; WIDTH])
+impl Board {
+	fn empty() -> Board {
+		Board([[Default::default(); WIDTH]; WIDTH])
 	}
 }
 
-impl std::ops::Index<Coords2D> for Grid {
+impl std::ops::Index<Coords2D> for Board {
 	type Output = Option<Token>;
 
 	fn index<'a>(&'a self, c: Coords2D) -> &'a Option<Token> {
@@ -35,7 +30,7 @@ impl std::ops::Index<Coords2D> for Grid {
 	}
 }
 
-impl std::ops::IndexMut<Coords2D> for Grid {
+impl std::ops::IndexMut<Coords2D> for Board {
 	fn index_mut<'a>(&'a mut self, c: Coords2D) -> &'a mut Option<Token> {
 		&mut self.0[c.y][c.x]
 	}
@@ -59,56 +54,56 @@ impl Display for Token {
 }
 
 #[derive(Clone)]
-pub struct Board {
-	grid: Grid,
+pub struct Game {
+	board: Board,
 	nb_crowned_moves_without_capture: usize,
 }
 
-impl Board {
-	pub fn new() -> Board {
-		let mut b = Board {
-			grid: Grid::empty(),
+impl Game {
+	pub fn new() -> Game {
+		let mut g = Game {
+			board: Board::empty(),
 			nb_crowned_moves_without_capture: 0,
 		};
 
 		// FIXME: to use when stable
-		//for col in (0..b.grid.0.len()).step_by(2) {
+		//for col in (0..g.board.0.len()).step_by(2) {
 
-		for row in 0..(b.grid.0.len() / 2 - 1) {
-			for col in 0..b.grid.0.len() {
+		for row in 0..(g.board.0.len() / 2 - 1) {
+			for col in 0..g.board.0.len() {
 				if col % 2 == 1 {
 					continue
 				}
 				let base = if row % 2 == 1 { 1 } else { 0 };
-				if base + col < b.grid.0.len() {
-					b.grid.0[row][base + col] = Some(Token { player: Player::White, crowned: false });
+				if base + col < g.board.0.len() {
+					g.board.0[row][base + col] = Some(Token { player: Player::White, crowned: false });
 				}
 			}
 		}
 
-		for row in (b.grid.0.len() / 2 + 1)..b.grid.0.len() {
-			for col in 0..b.grid.0.len() {
+		for row in (g.board.0.len() / 2 + 1)..g.board.0.len() {
+			for col in 0..g.board.0.len() {
 				if col % 2 == 1 {
 					continue
 				}
 				let base = if row % 2 == 1 { 1 } else { 0 };
-				if base + col < b.grid.0.len() {
-					b.grid.0[row][base + col] = Some(Token { player: Player::Black, crowned: false });
+				if base + col < g.board.0.len() {
+					g.board.0[row][base + col] = Some(Token { player: Player::Black, crowned: false });
 				}
 			}
 		}
 
-		return b;
+		return g;
 	}
 
 	fn is_in(&self, x: isize, y: isize) -> bool {
-		x >= 0 && x < self.grid.0.len() as isize && y >= 0 && y < self.grid.0.len() as isize
+		x >= 0 && x < self.board.0.len() as isize && y >= 0 && y < self.board.0.len() as isize
 	}
 
 	fn possible_moves_from(&self, src: Coords2D, moves: &mut Vec<Move>) {
 		let x = src.x as isize;
 		let y = src.y as isize;
-		let t = self.grid[src].unwrap();
+		let t = self.board[src].unwrap();
 
 		let mut dy = if t.player == Player::White && !t.crowned { 1 } else { -1 };
 
@@ -121,7 +116,7 @@ impl Board {
 
 				while self.is_in(cx, cy) {
 					let dst = Coords2D { x: cx as usize, y: cy as usize };
-					match self.grid[dst] {
+					match self.board[dst] {
 						None => moves.push(Move {
 							src: src,
 							dst: dst,
@@ -156,7 +151,7 @@ impl Board {
 	fn possible_captures(&self, src: Coords2D, pos: Coords2D, captured: &mut Vec<Coords2D>, moves: &mut Vec<Move>) {
 		let x = pos.x as isize;
 		let y = pos.y as isize;
-		let t = self.grid[src].unwrap();
+		let t = self.board[src].unwrap();
 
 		let mut done = true;
 		let mut dy = -1;
@@ -174,7 +169,7 @@ impl Board {
 
 					match capture_target {
 						None => {
-							match self.grid[c] {
+							match self.board[c] {
 								Some(Token { player: p, crowned: _ }) => {
 									// can't go over:
 									// - its own tokens
@@ -190,7 +185,7 @@ impl Board {
 							}
 						},
 						Some(cap) => {
-							match self.grid[c] {
+							match self.board[c] {
 								None => {
 									captured.push(cap);
 									self.possible_captures(src, c, captured, moves);
@@ -227,7 +222,7 @@ impl Board {
 	}
 }
 
-impl TwoPlayerBoard<Move> for Board {
+impl TwoPlayerGame<Move> for Game {
 	fn winner(&self) -> Option<Player> {
 		match (self.possible_moves(Player::White).is_empty(), self.possible_moves(Player::Black).is_empty()) {
 			(true, true) => None,
@@ -239,25 +234,25 @@ impl TwoPlayerBoard<Move> for Board {
 
 	fn play(&mut self, p: Player, m: &Move) {
 		// update the number of crowned move without capture
-		if self.grid[m.src].unwrap().crowned && m.captured.is_empty() {
+		if self.board[m.src].unwrap().crowned && m.captured.is_empty() {
 			self.nb_crowned_moves_without_capture += 1;
 		} else {
 			self.nb_crowned_moves_without_capture = 0;
 		}
 
 		// perform the move
-		self.grid[m.dst] = self.grid[m.src];
-		self.grid[m.src] = None;
+		self.board[m.dst] = self.board[m.src];
+		self.board[m.src] = None;
 
 		// remove captured tokens
 		for c in m.captured.iter() {
-			self.grid[*c] = None;
+			self.board[*c] = None;
 		}
 
 		// crown the piece if necessary
-		if ((p == Player::White && m.dst.y == self.grid.0.len() - 1) || (p == Player::Black && m.dst.y == 0))
-				&& !self.grid[m.dst].unwrap().crowned {
-			self.grid[m.dst].as_mut().unwrap().crowned = true;
+		if ((p == Player::White && m.dst.y == self.board.0.len() - 1) || (p == Player::Black && m.dst.y == 0))
+				&& !self.board[m.dst].unwrap().crowned {
+			self.board[m.dst].as_mut().unwrap().crowned = true;
 		}
 	}
 
@@ -269,9 +264,9 @@ impl TwoPlayerBoard<Move> for Board {
 		// TODO: check moves with capture first
 		// if there exist such moves, then there is no need to check moves without capture
 
-		for y in 0..self.grid.0.len() {
-			for x in 0..self.grid.0.len() {
-				match self.grid.0[y][x] {
+		for y in 0..self.board.0.len() {
+			for x in 0..self.board.0.len() {
+				match self.board.0[y][x] {
 					Some(Token { player: p2, crowned: _ }) if p2 == p => {
 						let c = Coords2D { x: x, y: y };
 						self.possible_moves_from(c, moves);
@@ -281,14 +276,15 @@ impl TwoPlayerBoard<Move> for Board {
 			}
 		}
 
+		// FIXME: use max_by when stable
 		let max_captures = moves.iter().fold(0, |max, m| std::cmp::max(max, m.captured.len()));
 		moves.retain(|a| a.captured.len() == max_captures);
 	}
 }
 
-impl Display for Board {
+impl Display for Game {
 	fn fmt(&self, f: &mut Formatter) -> Result {
-		let b: Vec<&[Option<Token>]> = self.grid.0.iter().map(|r| &r[..]).collect();
+		let b: Vec<&[Option<Token>]> = self.board.0.iter().map(|r| &r[..]).collect();
 		draw_board(f, &b[..])
 	}
 }
@@ -358,5 +354,5 @@ impl Input for Move {
 }
 
 fn main() {
-	app::App::new(Board::new()).run();
+	app::App::new(Game::new()).run();
 }

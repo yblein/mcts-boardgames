@@ -1,16 +1,13 @@
+/// Implementation of a connect-4 game
+
 extern crate mcts;
 
 mod app;
 
-use std::fmt::Debug;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fmt::Result;
+use std::fmt::{Debug, Display, Formatter, Result};
 use std::io::Write;
 
-use mcts::Player;
-use mcts::TwoPlayerBoard;
-
+use mcts::{Player, TwoPlayerGame};
 use app::Input;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -105,15 +102,15 @@ impl Input for Move {
 }
 
 #[derive(Clone)]
-pub struct Grid([[Option<Token>; 6]; 7]);
+pub struct Board([[Option<Token>; 6]; 7]);
 
-impl Grid {
-	fn empty() -> Grid {
-		Grid([[None; 6]; 7])
+impl Board {
+	fn empty() -> Board {
+		Board([[None; 6]; 7])
 	}
 }
 
-impl Display for Grid {
+impl Display for Board {
 	fn fmt(&self, f: &mut Formatter) -> Result {
 		fn print_hor_line(f: &mut Formatter) -> Result {
 			try!(write!(f, " "));
@@ -148,17 +145,17 @@ impl Display for Grid {
 }
 
 #[derive(Clone)]
-pub struct Board {
-	grid: Grid,
+pub struct Game {
+	board: Board,
 }
 
-impl Board {
-	pub fn new() -> Board {
-		Board { grid: Grid::empty() }
+impl Game {
+	pub fn new() -> Game {
+		Game { board: Board::empty() }
 	}
 }
 
-impl TwoPlayerBoard<Move> for Board {
+impl TwoPlayerGame<Move> for Game {
 	fn winner(&self) -> Option<Player> {
 		// horizontally
 		for row in 0..6 {
@@ -166,7 +163,7 @@ impl TwoPlayerBoard<Move> for Board {
 			let mut last = Player::White;
 
 			for col in 0..7 {
-				match self.grid.0[col][row] {
+				match self.board.0[col][row] {
 					Some(Token { player: p }) =>
 						if p == last {
 							count += 1;
@@ -188,7 +185,7 @@ impl TwoPlayerBoard<Move> for Board {
 			let mut last = Player::White;
 
 			for row in 0..6 {
-				match self.grid.0[col][row] {
+				match self.board.0[col][row] {
 					Some(Token { player: p }) =>
 						if p == last {
 							count += 1;
@@ -212,7 +209,7 @@ impl TwoPlayerBoard<Move> for Board {
 				let mut offset = 0;
 
 				while col + offset < 7 && row + offset < 6 {
-					match self.grid.0[col + offset][row + offset] {
+					match self.board.0[col + offset][row + offset] {
 						Some(Token { player: p }) =>
 							if p == last {
 								count += 1;
@@ -239,7 +236,7 @@ impl TwoPlayerBoard<Move> for Board {
 				let mut offset = 0;
 
 				while col + offset < 7 && row + offset < 6 {
-					match self.grid.0[col + offset][5 - (row + offset)] {
+					match self.board.0[col + offset][5 - (row + offset)] {
 						Some(Token { player: p }) =>
 							if p == last {
 								count += 1;
@@ -263,7 +260,7 @@ impl TwoPlayerBoard<Move> for Board {
 	fn play(&mut self, p: Player, m: &Move) {
 		let Move(Coords(col)) = *m;
 
-		for cell in self.grid.0[col].iter_mut() {
+		for cell in self.board.0[col].iter_mut() {
 			if cell.is_none() {
 				*cell = Some(Token{player: p});
 				return;
@@ -276,20 +273,20 @@ impl TwoPlayerBoard<Move> for Board {
 			return;
 		}
 
-		for col in 0..self.grid.0.len() {
-			if self.grid.0[col][5].is_none() {
+		for col in 0..self.board.0.len() {
+			if self.board.0[col][5].is_none() {
 				moves.push(Move(Coords(col)));
 			}
 		}
 	}
 }
 
-impl Display for Board {
+impl Display for Game {
 	fn fmt(&self, f: &mut Formatter) -> Result {
-		write!(f, "{}", self.grid)
+		write!(f, "{}", self.board)
 	}
 }
 
 fn main() {
-	app::App::new(Board::new()).run();
+	app::App::new(Game::new()).run();
 }
