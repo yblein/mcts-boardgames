@@ -48,7 +48,7 @@ impl mcts::Move for Move {}
 impl Input for Move {
 	fn choose_stdin(moves: &Vec<Move>) -> Move {
 		loop {
-			let pos = Coords2D::read("Coords2D to play? (e.g., a1)");
+			let pos = Coords2D::read("Coordinates to play? (e.g., a1)");
 
 			for m in moves {
 				if m.0 == pos {
