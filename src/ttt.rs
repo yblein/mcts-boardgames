@@ -1,6 +1,10 @@
 extern crate mcts;
 
 use std;
+use std::fmt::Display;
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Result;
 
 use mcts::Player;
 use mcts::TwoPlayerBoard;
@@ -40,8 +44,8 @@ pub struct Token {
 	player: Player,
 }
 
-impl std::fmt::Display for Token {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for Token {
+	fn fmt(&self, f: &mut Formatter) -> Result {
 		match *self {
 			Token { player: Player::White } => write!(f, "⛂"),
 			Token { player: Player::Black } => write!(f, "⛀"),
@@ -102,8 +106,8 @@ impl TwoPlayerBoard<Move> for Board {
 	}
 }
 
-impl std::fmt::Display for Board {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for Board {
+	fn fmt(&self, f: &mut Formatter) -> Result {
 		let b: Vec<&[Option<Token>]> = self.grid.0.iter().map(|r| &r[..]).collect();
 		draw_board(f, &b[..])
 	}
@@ -112,14 +116,14 @@ impl std::fmt::Display for Board {
 #[derive(Clone, Default)]
 pub struct Move(Coords2D);
 
-impl std::fmt::Debug for Move {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Debug for Move {
+	fn fmt(&self, f: &mut Formatter) -> Result {
 		write!(f, "{}", self)
 	}
 }
 
-impl std::fmt::Display for Move {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for Move {
+	fn fmt(&self, f: &mut Formatter) -> Result {
 		let Move(pos) = *self;
 		write!(f, "{}", pos)
 	}
