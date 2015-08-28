@@ -1,14 +1,39 @@
 extern crate mcts;
 
 use std;
-use std::io::Write;
 
 use mcts::Player;
 use mcts::TwoPlayerBoard;
 
 use app::Input;
 
-make_types_square_grid_2d!(Grid, Option<Token>, 3);
+use utils::Coords2D;
+use utils::draw_board;
+
+const WIDTH: usize = 3;
+
+#[derive(Clone)]
+struct Grid([[Option<Token>; WIDTH]; WIDTH]);
+
+impl Grid {
+	fn empty() -> Grid {
+		Grid([[Default::default(); WIDTH]; WIDTH])
+	}
+}
+
+impl std::ops::Index<Coords2D> for Grid {
+	type Output = Option<Token>;
+
+	fn index<'a>(&'a self, c: Coords2D) -> &'a Option<Token> {
+		&self.0[c.y][c.x]
+	}
+}
+
+impl std::ops::IndexMut<Coords2D> for Grid {
+	fn index_mut<'a>(&'a mut self, c: Coords2D) -> &'a mut Option<Token> {
+		&mut self.0[c.y][c.x]
+	}
+}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -37,15 +62,15 @@ impl Board {
 
 impl TwoPlayerBoard<Move> for Board {
 	fn winner(&self) -> Option<Player> {
-		static LIST: [[Coords; 3]; 8] = [
-			[Coords { x: 0, y: 0 }, Coords { x: 1, y: 0 }, Coords { x: 2, y: 0 }],
-			[Coords { x: 0, y: 1 }, Coords { x: 1, y: 1 }, Coords { x: 2, y: 1 }],
-			[Coords { x: 0, y: 2 }, Coords { x: 1, y: 2 }, Coords { x: 2, y: 2 }],
-			[Coords { x: 0, y: 0 }, Coords { x: 0, y: 1 }, Coords { x: 0, y: 2 }],
-			[Coords { x: 1, y: 0 }, Coords { x: 1, y: 1 }, Coords { x: 1, y: 2 }],
-			[Coords { x: 2, y: 0 }, Coords { x: 2, y: 1 }, Coords { x: 2, y: 2 }],
-			[Coords { x: 0, y: 0 }, Coords { x: 1, y: 1 }, Coords { x: 2, y: 2 }],
-			[Coords { x: 0, y: 2 }, Coords { x: 1, y: 1 }, Coords { x: 2, y: 0 }],
+		static LIST: [[Coords2D; 3]; 8] = [
+			[Coords2D { x: 0, y: 0 }, Coords2D { x: 1, y: 0 }, Coords2D { x: 2, y: 0 }],
+			[Coords2D { x: 0, y: 1 }, Coords2D { x: 1, y: 1 }, Coords2D { x: 2, y: 1 }],
+			[Coords2D { x: 0, y: 2 }, Coords2D { x: 1, y: 2 }, Coords2D { x: 2, y: 2 }],
+			[Coords2D { x: 0, y: 0 }, Coords2D { x: 0, y: 1 }, Coords2D { x: 0, y: 2 }],
+			[Coords2D { x: 1, y: 0 }, Coords2D { x: 1, y: 1 }, Coords2D { x: 1, y: 2 }],
+			[Coords2D { x: 2, y: 0 }, Coords2D { x: 2, y: 1 }, Coords2D { x: 2, y: 2 }],
+			[Coords2D { x: 0, y: 0 }, Coords2D { x: 1, y: 1 }, Coords2D { x: 2, y: 2 }],
+			[Coords2D { x: 0, y: 2 }, Coords2D { x: 1, y: 1 }, Coords2D { x: 2, y: 0 }],
 		];
 
 		for v in LIST.iter() {
@@ -70,7 +95,7 @@ impl TwoPlayerBoard<Move> for Board {
 		for y in 0..self.grid.0.len() {
 			for x in 0..self.grid.0.len() {
 				if self.grid.0[y][x].is_none() {
-					moves.push(Move(Coords { x: x, y: y }))
+					moves.push(Move(Coords2D { x: x, y: y }))
 				}
 			}
 		}
@@ -79,12 +104,13 @@ impl TwoPlayerBoard<Move> for Board {
 
 impl std::fmt::Display for Board {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", self.grid)
+		let b: Vec<&[Option<Token>]> = self.grid.0.iter().map(|r| &r[..]).collect();
+		draw_board(f, &b[..])
 	}
 }
 
 #[derive(Clone, Default)]
-pub struct Move(Coords);
+pub struct Move(Coords2D);
 
 impl std::fmt::Debug for Move {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -104,7 +130,7 @@ impl mcts::Move for Move {}
 impl Input for Move {
 	fn choose_stdin(moves: &Vec<Move>) -> Move {
 		loop {
-			let pos = Coords::read("Coords to play? (e.g., a1)");
+			let pos = Coords2D::read("Coords2D to play? (e.g., a1)");
 
 			for m in moves {
 				if m.0 == pos {

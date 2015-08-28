@@ -1,14 +1,39 @@
 extern crate mcts;
 
 use std;
-use std::io::Write;
 
 use mcts::Player;
 use mcts::TwoPlayerBoard;
 
 use app::Input;
 
-make_types_square_grid_2d!(Grid, Option<Token>, 8);
+use utils::Coords2D;
+use utils::draw_board;
+
+const WIDTH: usize = 8;
+
+#[derive(Clone)]
+struct Grid([[Option<Token>; WIDTH]; WIDTH]);
+
+impl Grid {
+	fn empty() -> Grid {
+		Grid([[Default::default(); WIDTH]; WIDTH])
+	}
+}
+
+impl std::ops::Index<Coords2D> for Grid {
+	type Output = Option<Token>;
+
+	fn index<'a>(&'a self, c: Coords2D) -> &'a Option<Token> {
+		&self.0[c.y][c.x]
+	}
+}
+
+impl std::ops::IndexMut<Coords2D> for Grid {
+	fn index_mut<'a>(&'a mut self, c: Coords2D) -> &'a mut Option<Token> {
+		&mut self.0[c.y][c.x]
+	}
+}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Token {
@@ -74,7 +99,7 @@ impl Board {
 		x >= 0 && x < self.grid.0.len() as isize && y >= 0 && y < self.grid.0.len() as isize
 	}
 
-	fn possible_moves_from(&self, src: Coords, moves: &mut Vec<Move>) {
+	fn possible_moves_from(&self, src: Coords2D, moves: &mut Vec<Move>) {
 		let x = src.x as isize;
 		let y = src.y as isize;
 		let t = self.grid[src].unwrap();
@@ -89,7 +114,7 @@ impl Board {
 				let mut cy = y + dy;
 
 				while self.is_in(cx, cy) {
-					let dst = Coords { x: cx as usize, y: cy as usize };
+					let dst = Coords2D { x: cx as usize, y: cy as usize };
 					match self.grid[dst] {
 						None => moves.push(Move {
 							src: src,
@@ -118,11 +143,11 @@ impl Board {
 		}
 
 		// plus moves with captures
-		let mut captured: Vec<Coords> = Vec::new();
+		let mut captured: Vec<Coords2D> = Vec::new();
 		self.possible_captures(src, src, &mut captured, moves);
 	}
 
-	fn possible_captures(&self, src: Coords, pos: Coords, captured: &mut Vec<Coords>, moves: &mut Vec<Move>) {
+	fn possible_captures(&self, src: Coords2D, pos: Coords2D, captured: &mut Vec<Coords2D>, moves: &mut Vec<Move>) {
 		let x = pos.x as isize;
 		let y = pos.y as isize;
 		let t = self.grid[src].unwrap();
@@ -139,7 +164,7 @@ impl Board {
 				let mut capture_target = None;
 
 				while self.is_in(cx, cy) {
-					let c = Coords { x: cx as usize, y: cy as usize };
+					let c = Coords2D { x: cx as usize, y: cy as usize };
 
 					match capture_target {
 						None => {
@@ -242,7 +267,7 @@ impl TwoPlayerBoard<Move> for Board {
 			for x in 0..self.grid.0.len() {
 				match self.grid.0[y][x] {
 					Some(Token { player: p2, crowned: _ }) if p2 == p => {
-						let c = Coords { x: x, y: y };
+						let c = Coords2D { x: x, y: y };
 						self.possible_moves_from(c, moves);
 					}
 					_ => (),
@@ -257,15 +282,16 @@ impl TwoPlayerBoard<Move> for Board {
 
 impl std::fmt::Display for Board {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", self.grid)
+		let b: Vec<&[Option<Token>]> = self.grid.0.iter().map(|r| &r[..]).collect();
+		draw_board(f, &b[..])
 	}
 }
 
 #[derive(Clone, Default)]
 pub struct Move {
-	src: Coords,
-	dst: Coords,
-	captured: Vec<Coords>,
+	src: Coords2D,
+	dst: Coords2D,
+	captured: Vec<Coords2D>,
 }
 
 impl std::fmt::Debug for Move {
@@ -296,7 +322,7 @@ impl mcts::Move for Move {}
 impl Input for Move {
 	fn choose_stdin(moves: &Vec<Move>) -> Move {
 		loop {
-			let src = Coords::read("Token to move? (e.g., a1)");
+			let src = Coords2D::read("Token to move? (e.g., a1)");
 			let mut moves_from_src: Vec<Move> = moves.iter().filter(|ref m| m.src == src).cloned().collect();
 
 			match moves_from_src.len() {
@@ -308,7 +334,7 @@ impl Input for Move {
 				_ => (),
 			}
 
-			let dst = Coords::read("Destination? (e.g., b2)");
+			let dst = Coords2D::read("Destination? (e.g., b2)");
 			moves_from_src.retain(|ref m| m.dst == dst);
 
 			match moves_from_src.len() {

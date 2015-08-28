@@ -1,7 +1,6 @@
 extern crate mcts;
 
-#[macro_use]
-mod grid;
+mod utils;
 mod checkers;
 mod app;
 
