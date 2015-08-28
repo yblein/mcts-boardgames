@@ -1,4 +1,3 @@
-extern crate rand;
 extern crate mcts;
 
 use std;
@@ -6,9 +5,8 @@ use std::io::Write;
 
 use mcts::Player;
 use mcts::TwoPlayerBoard;
-use mcts::TwoPlayerGame;
 
-use app::AppPlayer;
+use app::Input;
 
 make_types_square_grid_2d!(Grid, Option<Token>, 8);
 
@@ -237,11 +235,14 @@ impl TwoPlayerBoard<Move> for Board {
 			return;
 		}
 
+		// TODO: check moves with capture first
+		// if there exist such moves, then there is no need to check moves without capture
+
 		for y in 0..self.grid.0.len() {
 			for x in 0..self.grid.0.len() {
 				match self.grid.0[y][x] {
 					Some(Token { player: p2, crowned: _ }) if p2 == p => {
-                        let c = Coords { x: x, y: y };
+						let c = Coords { x: x, y: y };
 						self.possible_moves_from(c, moves);
 					}
 					_ => (),
@@ -260,7 +261,7 @@ impl std::fmt::Display for Board {
 	}
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Default, PartialEq, Eq)]
 pub struct Move {
 	src: Coords,
 	dst: Coords,
@@ -286,16 +287,8 @@ impl std::fmt::Display for Move {
 
 impl mcts::Move for Move {}
 
-pub struct HumanPlayer;
-
-impl AppPlayer<Board, Move> for HumanPlayer {
-	fn get_next_move(&mut self, game: &TwoPlayerGame<Board, Move>) -> Move {
-		println!("Possible moves:");
-		let moves = game.possible_moves();
-		for m in &moves {
-			println!("{}", m)
-		}
-
+impl Input for Move {
+	fn choose_stdin(moves: &Vec<Move>) -> Move {
 		loop {
 			let src = Coords::read("Token to move? (e.g., a1)");
 			let mut moves_from_src: Vec<Move> = moves.iter().filter(|ref m| m.src == src).cloned().collect();

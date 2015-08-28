@@ -1,4 +1,3 @@
-extern crate rand;
 extern crate mcts;
 
 use std;
@@ -6,9 +5,8 @@ use std::io::Write;
 
 use mcts::Player;
 use mcts::TwoPlayerBoard;
-use mcts::TwoPlayerGame;
 
-use app::AppPlayer;
+use app::Input;
 
 make_types_square_grid_2d!(Grid, Option<Token>, 3);
 
@@ -97,20 +95,12 @@ impl std::fmt::Display for Move {
 
 impl mcts::Move for Move {}
 
-pub struct HumanPlayer;
-
-impl AppPlayer<Board, Move> for HumanPlayer {
-	fn get_next_move(&mut self, game: &TwoPlayerGame<Board, Move>) -> Move {
-		println!("Possible moves:");
-		let moves = game.possible_moves();
-		for m in &moves {
-			println!("{}", m)
-		}
-
+impl Input for Move {
+	fn choose_stdin(moves: &Vec<Move>) -> Move {
 		loop {
 			let pos = Coords::read("Coords to play? (e.g., a1)");
 
-			for m in &moves {
+			for m in moves {
 				if m.0 == pos {
 					return m.clone();
 				}

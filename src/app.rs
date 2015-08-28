@@ -1,11 +1,13 @@
 extern crate rand;
 extern crate mcts;
 
+use std;
+use std::io::Write;
+use std::fmt::Display;
+
 use mcts::TwoPlayerGame;
 use mcts::TwoPlayerBoard;
 use mcts::Move;
-
-use std::fmt::Display;
 
 pub trait AppPlayer<B: TwoPlayerBoard<M>, M: Move> {
 	fn get_next_move(&mut self, game: &TwoPlayerGame<B, M>) -> M;
@@ -33,16 +35,34 @@ impl<B: TwoPlayerBoard<M>, M: Move, R: rand::Rng> AppPlayer<B, M> for ComputerPl
 	}
 }
 
-pub struct App<B: TwoPlayerBoard<M> + Display, M: Move> {
+pub struct HumanPlayer;
+
+impl<B: TwoPlayerBoard<M>, M: Move + Input> AppPlayer<B, M> for HumanPlayer {
+	fn get_next_move(&mut self, game: &TwoPlayerGame<B, M>) -> M {
+		println!("Possible moves:");
+		let moves = game.possible_moves();
+		for m in &moves {
+			println!("{}", m)
+		}
+
+		M::choose_stdin(&moves)
+	}
+}
+
+pub trait Input {
+	fn choose_stdin(moves: &Vec<Self>) -> Self;
+}
+
+pub struct App<B: TwoPlayerBoard<M>, M: Move> {
 	game: TwoPlayerGame<B, M>,
 	players: [Box<AppPlayer<B, M>>; 2],
 }
 
-impl<B: TwoPlayerBoard<M> + Display, M: Move> App<B, M> {
-	pub fn new(board: B, p1: Box<AppPlayer<B, M>>, p2: Box<AppPlayer<B, M>>) -> App<B, M> {
+impl<B: TwoPlayerBoard<M> + Display, M: Move + Input> App<B, M> {
+	pub fn new(board: B) -> App<B, M> {
 		App {
 			game: TwoPlayerGame::new(board),
-			players: [p1, p2],
+			players: [make_player("White player"), make_player("Black player")],
 		}
 	}
 
@@ -81,20 +101,37 @@ impl<B: TwoPlayerBoard<M> + Display, M: Move> App<B, M> {
 	}
 
 	pub fn run_quiet(&mut self) -> Option<mcts::Player> {
-        loop {
-			if self.game.is_over() {
-				return self.game.winner();
-			}
-
+		while !self.game.is_over() {
 			let moves = self.game.possible_moves();
-
 			let m: M = if moves.len() == 1 {
 				moves[0].clone()
 			} else {
 				self.players[self.game.current_player() as usize].get_next_move(&self.game)
 			};
-
 			self.game.play(&m);
 		}
+
+		return self.game.winner();
+	}
+}
+
+fn make_player<B: TwoPlayerBoard<M>, M: Move + Input>(msg: &str) -> Box<AppPlayer<B, M>> {
+	println!("{}?", msg);
+	println!("0: Player");
+	println!("1: Computer");
+	print!("> ");
+	std::io::stdout().flush().unwrap();
+
+	let mut s = String::new();
+	std::io::stdin().read_line(&mut s).unwrap();
+
+	let mode = match s.trim_right().parse::<usize>() {
+		Ok(n) if n <= 1 => n,
+		_ => panic!("Invalid number"),
+	};
+
+	match mode {
+		0 => Box::new(HumanPlayer),
+		_ => Box::new(ComputerPlayer::new(rand::thread_rng(), 10000, 1.0)),
 	}
 }
