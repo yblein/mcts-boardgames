@@ -37,7 +37,7 @@ impl<B: TwoPlayerBoard<M>, M: Move, R: rand::Rng> AppPlayer<B, M> for ComputerPl
 
 pub struct HumanPlayer;
 
-impl<B: TwoPlayerBoard<M>, M: Move + Input> AppPlayer<B, M> for HumanPlayer {
+impl<B: TwoPlayerBoard<M>, M: Move + Display + Input> AppPlayer<B, M> for HumanPlayer {
 	fn get_next_move(&mut self, game: &TwoPlayerGame<B, M>) -> M {
 		println!("Possible moves:");
 		let moves = game.possible_moves();
@@ -58,7 +58,7 @@ pub struct App<B: TwoPlayerBoard<M>, M: Move> {
 	players: [Box<AppPlayer<B, M>>; 2],
 }
 
-impl<B: TwoPlayerBoard<M> + Display, M: Move + Input> App<B, M> {
+impl<B: TwoPlayerBoard<M> + Display, M: Move + Display + Input> App<B, M> {
 	pub fn new(board: B) -> App<B, M> {
 		App {
 			game: TwoPlayerGame::new(board),
@@ -115,7 +115,7 @@ impl<B: TwoPlayerBoard<M> + Display, M: Move + Input> App<B, M> {
 	}
 }
 
-fn make_player<B: TwoPlayerBoard<M>, M: Move + Input>(msg: &str) -> Box<AppPlayer<B, M>> {
+fn make_player<B: TwoPlayerBoard<M>, M: Move + Display + Input>(msg: &str) -> Box<AppPlayer<B, M>> {
 	println!("{}?", msg);
 	println!("0: Player");
 	println!("1: Computer");

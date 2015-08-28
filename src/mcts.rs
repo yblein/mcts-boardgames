@@ -61,7 +61,7 @@ pub trait TwoPlayerBoard<M: Move> : Clone {
 	}
 }
 
-pub trait Move: std::fmt::Display+Clone+Eq+Default {}
+pub trait Move: std::fmt::Debug+Clone+Default {}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Player {
@@ -217,7 +217,7 @@ impl<M: Move> std::fmt::Debug for Node<M> {
 				if depth == 0 {
 					try!(write!(f, "[root]\n"));
 				} else {
-					try!(write!(f, "[M: {}, S/V: {}/{} = {}]\n", node.last_move, node.score, node.nb_visits, node.score / node.nb_visits as f32));
+					try!(write!(f, "[M: {:?}, S/V: {}/{} = {}]\n", node.last_move, node.score, node.nb_visits, node.score / node.nb_visits as f32));
 				}
 
 				for c in node.children.iter() {

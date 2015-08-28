@@ -83,8 +83,14 @@ impl std::fmt::Display for Board {
 	}
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Default)]
 pub struct Move(Coords);
+
+impl std::fmt::Debug for Move {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "{}", self)
+	}
+}
 
 impl std::fmt::Display for Move {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

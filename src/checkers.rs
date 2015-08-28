@@ -261,15 +261,21 @@ impl std::fmt::Display for Board {
 	}
 }
 
-#[derive(Clone, Default, PartialEq, Eq)]
+#[derive(Clone, Default)]
 pub struct Move {
 	src: Coords,
 	dst: Coords,
 	captured: Vec<Coords>,
 }
 
+impl std::fmt::Debug for Move {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "{}", self)
+	}
+}
+
 impl std::fmt::Display for Move {
-	fn fmt(&self, f:&mut std::fmt::Formatter) -> std::fmt::Result {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		try!(write!(f, "{} -> {}", self.src, self.dst));
 
 		if !self.captured.is_empty() {
