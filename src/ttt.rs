@@ -1,6 +1,8 @@
 extern crate mcts;
 
-use std;
+mod utils;
+mod app;
+
 use std::fmt::Display;
 use std::fmt::Debug;
 use std::fmt::Formatter;
@@ -134,4 +136,8 @@ impl Display for Board {
 		let b: Vec<&[Option<Token>]> = self.0.iter().map(|r| &r[..]).collect();
 		draw_board(f, &b[..])
 	}
+}
+
+fn main() {
+	app::App::new(Board::new()).run();
 }

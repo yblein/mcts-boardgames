@@ -1,6 +1,8 @@
 extern crate mcts;
 
-use std;
+mod utils;
+mod app;
+
 use std::fmt::Display;
 use std::fmt::Debug;
 use std::fmt::Formatter;
@@ -353,4 +355,8 @@ impl Input for Move {
 			println!("Impossible move");
 		}
 	}
+}
+
+fn main() {
+	app::App::new(Board::new()).run();
 }

@@ -9,7 +9,11 @@ path = "src/mcts.rs"
 
 [[bin]]
 name = "checkers"
-path = "src/main.rs"
+path = "src/checkers.rs"
+
+[[bin]]
+name = "ttt"
+path = "src/ttt.rs"
 
 [dependencies]
 rand = "0.3"
