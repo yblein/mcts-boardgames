@@ -15,6 +15,10 @@ path = "src/checkers.rs"
 name = "ttt"
 path = "src/ttt.rs"
 
+[[bin]]
+name = "connect4"
+path = "src/connect4.rs"
+
 [dependencies]
 rand = "0.3"
 time = "*"
